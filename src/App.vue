@@ -1,32 +1,45 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view />
-  </div>
+  <v-app>
+    <AppNavBar></AppNavBar>
+    <AppNavDrawer></AppNavDrawer>
+    <v-main>
+      <router-view></router-view>
+    </v-main>
+  </v-app>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script lang="ts">
+import { Vue, Component } from "vue-property-decorator";
+import { namespace } from "vuex-class";
 
-#nav {
-  padding: 30px;
-}
+const Auth = namespace("Auth");
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
+import AppNavBar from "@/components/AppNavBar.vue";
+import AppNavDrawer from "@/components/AppNavDrawer.vue";
 
-#nav a.router-link-exact-active {
-  color: #42b983;
+@Component({
+  name: "App",
+  metaInfo() {
+    return {
+      titleTemplate: "%s | ສາງລ້ານຊ້າງດິຈິຕອລ"
+    };
+  },
+  components: {
+    AppNavBar,
+    AppNavDrawer
+  }
+})
+export default class App extends Vue {
+  @Auth.Mutation("LOGIN_STATUS") isLoggedIn!: (status: boolean) => void;
+  @Auth.Mutation("RETRIVE_AUTH_DATA") GET_AUTH!: () => void;
+
+  created() {
+    if (localStorage.getItem("token") == null) {
+      this.isLoggedIn(false);
+    } else {
+      this.GET_AUTH();
+      this.isLoggedIn(true);
+    }
+  }
 }
-</style>
+</script>
