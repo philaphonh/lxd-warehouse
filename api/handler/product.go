@@ -625,8 +625,8 @@ func ExportProduct(c echo.Context) error {
 	}
 	defer db.Close()
 
-	stmt := "INSERT INTO tbl_export VALUES(DEFAULT, ?, ?, ?)"
-	result, err := db.Exec(stmt, distributor, user, timestamp)
+	stmt := "INSERT INTO tbl_export VALUES(DEFAULT, ?, ?, ?, ?)"
+	result, err := db.Exec(stmt, distributor, user, timestamp, "ORDERED")
 	if err != nil {
 		fmt.Println(err)
 		return c.String(http.StatusInternalServerError, "Error DB Execution")
@@ -692,13 +692,15 @@ func GetAllExport(c echo.Context) error {
 		distributor string
 		user        string
 		time        string
+		status      string
 	)
 
 	query := `
 	SELECT tbl_export.id, 
 	td.distributor_name, 
 	tu.username, 
-	tbl_export.export_time
+	tbl_export.export_time,
+	tbl_export.export_status
 	FROM tbl_export
     INNER JOIN tbl_distributors td ON tbl_export.distributor_id = td.id
     INNER JOIN tbl_users tu ON tbl_export.user_id = tu.id
@@ -714,16 +716,17 @@ func GetAllExport(c echo.Context) error {
 	result := make([]model.Export, 0)
 
 	for rows.Next() {
-		if rows.Scan(&id, &distributor, &user, &time); err != nil {
+		if rows.Scan(&id, &distributor, &user, &time, &status); err != nil {
 			fmt.Println(err)
 			break
 		}
 		result = append(result,
 			model.Export{
-				ID:          id,
-				Distributor: distributor,
-				User:        user,
-				ExportTime:  time,
+				ID:           id,
+				Distributor:  distributor,
+				User:         user,
+				ExportTime:   time,
+				ExportStatus: status,
 			})
 	}
 
@@ -811,6 +814,20 @@ func ConfirmExport(c echo.Context) error {
 	}
 	defer db.Close()
 
+	stmt := "UPDATE tbl_export SET export_status = 'EXPORTED' WHERE id = ?"
+	result, err := db.Exec(stmt, exportID)
+	if err != nil {
+		fmt.Println(err)
+		return c.String(http.StatusInternalServerError, "Error DB Execution")
+	}
+
+	row, err := result.RowsAffected()
+	fmt.Println("Rows affected: ", row)
+
+	if row == 0 {
+		return c.String(http.StatusOK, "Nothing Updated")
+	}
+
 	var (
 		pid  int
 		pqty int
@@ -843,7 +860,7 @@ func ConfirmExport(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Rows Error")
 	}
 
-	stmt := "UPDATE tbl_products SET tbl_products.product_qty = tbl_products.product_qty - ? WHERE id = ?"
+	stmt = "UPDATE tbl_products SET tbl_products.product_qty = tbl_products.product_qty - ? WHERE id = ?"
 
 	for _, item := range detailResult {
 		result, err := db.Exec(stmt, item.ProductQty, item.ProductID)

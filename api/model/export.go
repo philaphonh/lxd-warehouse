@@ -2,10 +2,11 @@ package model
 
 // Export type
 type Export struct {
-	ID          int    `json:"id"`
-	Distributor string `json:"distributor"`
-	User        string `json:"user"`
-	ExportTime  string `json:"exportTime"`
+	ID           int    `json:"id"`
+	Distributor  string `json:"distributor"`
+	User         string `json:"user"`
+	ExportTime   string `json:"exportTime"`
+	ExportStatus string `json:"exportStatus"`
 }
 
 // ExportDetail type
