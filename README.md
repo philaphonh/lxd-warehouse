@@ -1,4 +1,5 @@
 # lxd-warehouse
+Warehouse Management System built with Vue TypeScript and Echo framework
 
 ## Project setup
 ```bash
@@ -27,3 +28,12 @@ yarn lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+## My Note
+
+There're still many things to improve in this repo including, but not limited to:
+
+- Implement Vuex for global states
+- Refactor Go code
+- Add missing functionalities e.g. charts
+
