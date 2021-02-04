@@ -3,6 +3,7 @@ node_modules
 vendor
 /dist
 /api/upload/*
+api/upload/*
 
 # local env files
 .env
