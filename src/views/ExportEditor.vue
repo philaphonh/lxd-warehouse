@@ -17,7 +17,7 @@
           :items="distributorsList"
           item-text="name"
           item-value="id"
-          label="ຜູ້ສະໜອງສິນຄ້າ"
+          label="ຕົວແທນຈໍາໜ່າຍ"
         ></v-select>
         <v-data-table
           :headers="tableHeaders"
@@ -51,9 +51,9 @@ const App = namespace("App");
   name: "ExportEditorPage",
   metaInfo() {
     return {
-      title: "ນໍາອອກສິນຄ້າ"
+      title: "ນໍາອອກສິນຄ້າ",
     };
-  }
+  },
 })
 export default class ExportEditor extends Vue {
   private pageTitle = "ນໍາອອກສິນຄ້າ";
@@ -62,7 +62,7 @@ export default class ExportEditor extends Vue {
     show: false,
     text: "",
     type: "",
-    timeout: 3000
+    timeout: 3000,
   };
 
   private distributorId = 0;
@@ -73,8 +73,8 @@ export default class ExportEditor extends Vue {
     {
       id: 0,
       name: "Nothing",
-      address: "Nothing"
-    }
+      address: "Nothing",
+    },
   ];
 
   private productsList: Array<Product> = [
@@ -86,34 +86,38 @@ export default class ExportEditor extends Vue {
       description: "Nothing",
       price: 0,
       qty: 0,
-      imageUrl: ""
-    }
+      imageUrl: "",
+    },
   ];
 
   private tableHeaders = [
     {
       text: "ລະຫັດ",
-      value: "id"
+      value: "id",
     },
     {
       text: "ຊື່ສິນຄ້າ",
-      value: "name"
+      value: "name",
     },
     {
       text: "ຈໍານວນສິນຄ້າທີ່ມີຢູ່ໃນຄັງ",
-      value: "qty"
+      value: "qty",
     },
     {
       text: "ຈໍານວນທີ່ຕ້ອງການນໍາອອກ",
       value: "quantity",
-      sortable: false
-    }
+      sortable: false,
+    },
   ];
 
   @App.Mutation("SET_APP_NAV_TITLE") APP_NAV_TITLE!: (title: string) => void;
 
   onExport() {
     let error = false;
+    if (!this.distributorId) {
+      error = true;
+      return;
+    }
     for (let i = 0; i < this.selectedProducts.length; i++) {
       if (this.selectedProducts[i].quantity > this.selectedProducts[i].qty) {
         error = true;
@@ -129,63 +133,52 @@ export default class ExportEditor extends Vue {
     form.append("user", localStorage.getItem("id") as string);
     this.$http
       .post("/product/export", form)
-      .then(res => {
+      .then((res) => {
         if (res.status == 201) {
           id = res.data;
-          this.selectedProducts.forEach(item => {
+          console.log(typeof id);
+          console.log(id);
+          this.selectedProducts.forEach((item) => {
             this.$http
               .post(`/product/export/detail/${id}`, item, {
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" },
               })
-              .then(res => {
+              .then((res) => {
                 if (res.status == 201) {
+                  this.snackbar = {
+                    show: true,
+                    text: "ເພີ່ມຂໍ້ມູນສໍາເລັດ",
+                    type: "success",
+                    timeout: 3000,
+                  };
                   console.log(res.data);
+                  setTimeout(() => {
+                    this.$router.back();
+                  }, 3500);
                 }
               })
-              .catch(err => {
+              .catch((err) => {
                 this.snackbar = {
                   show: true,
                   text: "ບໍ່ສໍາເລັດ!",
                   type: "error",
-                  timeout: 3000
+                  timeout: 3000,
                 };
                 console.log(err);
+                return;
               });
           });
-          this.$http
-            .put(`/product/export/confirm/${id}`)
-            .then(res => {
-              if (res.status == 200) {
-                this.snackbar = {
-                  show: true,
-                  text: "ຢືນຢັນການນໍາອອກແລ້ວ",
-                  type: "success",
-                  timeout: 3000
-                };
-                setTimeout(() => {
-                  this.$router.back();
-                }, 3500);
-              }
-            })
-            .catch(err => {
-              this.snackbar = {
-                show: true,
-                text: "ບໍ່ສໍາເລັດ!",
-                type: "error",
-                timeout: 3000
-              };
-              console.log(err);
-            });
         }
       })
-      .catch(err => {
+      .catch((err) => {
         this.snackbar = {
           show: true,
           text: "ບໍ່ສໍາເລັດ!",
           type: "error",
-          timeout: 3000
+          timeout: 3000,
         };
         console.log(err);
+        return;
       });
   }
 
@@ -196,17 +189,17 @@ export default class ExportEditor extends Vue {
   getDistributorData() {
     this.$http
       .get("/extras/distributor/all")
-      .then(res => {
+      .then((res) => {
         if (res.data.length > 0) {
           this.distributorsList = res.data;
         }
       })
-      .catch(err => {
+      .catch((err) => {
         this.snackbar = {
           show: true,
           text: "ດຶງຂໍ້ມູນບໍ່ສໍາເລັດ!",
           type: "error",
-          timeout: 3000
+          timeout: 3000,
         };
         console.log(err);
       });
@@ -215,15 +208,15 @@ export default class ExportEditor extends Vue {
   getProductsData() {
     this.$http
       .get("/product/all")
-      .then(res => {
+      .then((res) => {
         this.productsList = res.data;
       })
-      .catch(err => {
+      .catch((err) => {
         this.snackbar = {
           show: true,
           text: "ດຶງຂໍ້ມູນບໍ່ສໍາເລັດ!",
           type: "error",
-          timeout: 3000
+          timeout: 3000,
         };
         console.log(err);
       });

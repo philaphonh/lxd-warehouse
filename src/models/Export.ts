@@ -3,6 +3,7 @@ export interface Export {
     distributor: string;
     user: string;
     exportTime: Date | string;
+    exportStatus: string;
 }
 
 export interface ExportDetail {

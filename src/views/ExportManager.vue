@@ -1,5 +1,12 @@
 <template>
   <v-container fluid>
+    <v-snackbar
+      v-model="snackbar.show"
+      top
+      :color="snackbar.type"
+      :timeout="snackbar.timeout"
+      >{{ snackbar.text }}</v-snackbar
+    >
     <v-data-table :headers="tableHeaders" :items="exports">
       <template v-slot:top>
         <v-toolbar flat>
@@ -11,10 +18,30 @@
           >
         </v-toolbar>
       </template>
+      <template v-slot:item.exportStatus="props">
+        {{
+          props.item.exportStatus == "ORDERED"
+            ? "ກໍາລັງດໍາເນີນການ"
+            : "ສົ່ງອອກແລ້ວ"
+        }}
+      </template>
       <template v-slot:item.actions="props">
         <v-btn text @click.stop="getExportDetail(props.item.id)">
           <v-icon small color="primary" class="mr-2">mdi-view-list</v-icon
           >ເບິ່ງລາຍລະອຽດ
+        </v-btn>
+        <v-btn text @click="onConfirmExport(props.item)">
+          <v-icon
+            small
+            color="primary"
+            class="mr-2"
+            :disabled="props.item.status == 'EXPORTED'"
+            >mdi-pencil</v-icon
+          >{{
+            props.item.exportStatus == "ORDERED"
+              ? "ຢືນຢັນການສົ່ງອອກ"
+              : "ສົ່ງອອກແລ້ວ"
+          }}
         </v-btn>
         <v-dialog v-model="detailDialog">
           <v-card>
@@ -41,35 +68,46 @@ const App = namespace("App");
   name: "ExportManagerPage",
   metaInfo() {
     return {
-      title: "ຈັດການສົ່ງອອກສິນຄ້າ"
+      title: "ຈັດການສົ່ງອອກສິນຄ້າ",
     };
-  }
+  },
 })
 export default class ExportManager extends Vue {
   private pageTitle = "ຈັດການສົ່ງອອກສິນຄ້າ";
 
+  private snackbar = {
+    show: false,
+    text: "",
+    type: "",
+    timeout: 3000,
+  };
+
   private tableHeaders = [
     {
       text: "ລະຫັດ",
-      value: "id"
+      value: "id",
     },
     {
       text: "ຕົວແທນຈໍາໜ່າຍ",
-      value: "distributor"
+      value: "distributor",
     },
     {
       text: "ຜູ້ຮັບຜິດຊອບການນໍາອອກ",
-      value: "user"
+      value: "user",
     },
     {
       text: "ເວລານໍາອອກ",
-      value: "exportTime"
+      value: "exportTime",
+    },
+    {
+      text: "ສະຖານະ",
+      value: "exportStatus",
     },
     {
       text: "ຕົວເລືອກ",
       value: "actions",
-      sortable: false
-    }
+      sortable: false,
+    },
   ];
 
   private exports: Array<Export> = [
@@ -77,8 +115,9 @@ export default class ExportManager extends Vue {
       id: 0,
       distributor: "Nothing",
       user: "Nothing",
-      exportTime: Date()
-    }
+      exportTime: Date(),
+      exportStatus: "ORDERED",
+    },
   ];
 
   private detailDialog = false;
@@ -87,15 +126,44 @@ export default class ExportManager extends Vue {
 
   @App.Mutation("SET_APP_NAV_TITLE") APP_NAV_TITLE!: (title: string) => void;
 
+  onConfirmExport(data: Export) {
+    if (data.exportStatus !== "ORDERED") {
+      return;
+    }
+    this.$http
+      .put(`/product/export/confirm/${data.id}`)
+      .then((res) => {
+        if (res.status == 200) {
+          this.snackbar = {
+            show: true,
+            text: "ຢືນຢັນການນໍາອອກແລ້ວ",
+            type: "success",
+            timeout: 3000,
+          };
+          this.getExportInfo();
+        }
+      })
+      .catch((err) => {
+        this.snackbar = {
+          show: true,
+          text: "ບໍ່ສໍາເລັດ!",
+          type: "error",
+          timeout: 3000,
+        };
+        console.log(err);
+        return;
+      });
+  }
+
   getExportInfo() {
     this.$http
       .get("/product/export/all")
-      .then(res => {
+      .then((res) => {
         if (res.data.length > 0) {
           this.exports = res.data;
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
       });
   }
@@ -104,12 +172,12 @@ export default class ExportManager extends Vue {
     this.detailDialog = true;
     this.$http
       .get("/product/export/detail/" + id)
-      .then(res => {
+      .then((res) => {
         if (res.data.length > 0) {
           this.exportDetail = res.data;
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
       });
   }

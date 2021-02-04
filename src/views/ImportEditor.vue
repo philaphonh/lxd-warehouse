@@ -110,6 +110,10 @@ export default class ImportEditor extends Vue {
 
   onImport() {
     let error = false;
+    if (!this.supplierId) {
+    	error = true;
+    	return;
+    }
     for (let i = 0; i < this.selectedProducts.length; i++) {
       if (this.selectedProducts[i].quantity <= 0) {
         error = true;
@@ -154,8 +158,11 @@ export default class ImportEditor extends Vue {
                   timeout: 3000
                 };
                 console.log(err);
+                return;
               });
           });
+        } else {
+          return;
         }
       })
       .catch(err => {
@@ -166,6 +173,7 @@ export default class ImportEditor extends Vue {
           timeout: 3000
         };
         console.log(err);
+        return;
       });
   }
 

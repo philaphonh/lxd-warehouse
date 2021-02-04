@@ -68,7 +68,7 @@ export default class LoginPage extends Vue {
           this.AUTH_DATA(res.data);
           this.SET_LOGIN_STATUS(true);
           console.log(this.authData);
-          this.$router.push("/");
+          this.$router.push("/products");
         } else {
           console.log(res.data);
           this.isError = true;
